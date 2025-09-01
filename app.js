@@ -4,7 +4,8 @@ const app = express();
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 4000;
+const pool = require('./db'); // Database connection
 
 // Set EJS as the view engine and set views directory
 app.set('view engine', 'ejs');
@@ -275,7 +276,20 @@ app.post('/posts', upload.single('image'), (req, res) => {
       post: { title, content }
     });
   }
-  
+
+// Fetch posts from the database and render the homepage
+app.get('/', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM posts ORDER BY created_at DESC');
+    res.render('index', {
+      posts: result.rows,
+      title: 'Malawi Tourism Blog - Discover the Beauty of Malawi'
+    });
+  } catch (err) {
+    res.status(500).send('Database error');
+  }
+});
+
   const newPost = {
     id: nextId++,
     title,
